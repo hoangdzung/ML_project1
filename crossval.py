@@ -64,7 +64,7 @@ class GridSearchCV():
                     x_test = pipeline.transform(x_test)
                     if addition_on_test is not None:
                         x_test, y_test = addition_on_test(x_test,y_test)
-                        
+
                 w, loss = self.model(y_train, x_train,**params, **kwargs)            
 
                 y_pred = self.pred_functs(w, x_test)
@@ -80,5 +80,5 @@ class GridSearchCV():
         if self.refit:
             w,loss = self.model(y,tX, **dict(best_params),**kwargs)
 
-        return best_params, w, loss 
+        return best_params, w, loss, params_to_acc
         
