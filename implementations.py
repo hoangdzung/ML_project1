@@ -1,5 +1,4 @@
 import numpy as np
-from tqdm import tqdm
 
 VERY_LARGE_NUM = 1e20
 VERY_SMALL_NUM = 1e-20
@@ -248,7 +247,7 @@ def compute_log_loss(y, tx, w):
     loss = (y + 1).T.dot(np.log(pred + VERY_SMALL_NUM)) + (1 - y).T.dot(np.log(1 - pred + VERY_SMALL_NUM))
     return np.squeeze(-loss/2)/len(y)
 
-def compute_log_gradient(y, tx, w):
+def compute_log_gradient(y, tx, w,**kwargs):
     """compute the gradient of loss."""
     pred = sigmoid(tx.dot(w))
     if 'weight_loss' in kwargs:
@@ -291,8 +290,8 @@ def logistic_regression(y, tx, initial_w=None, max_iters=1000, gamma=0.01, tol=1
     best_w = w
     best_loss=VERY_LARGE_NUM
     n_iter_no_change=0
-    for iter in tqdm(range(max_iters)):
-        w -= gamma * compute_log_gradient(y, tx, w)
+    for iter in range(max_iters):
+        w -= gamma * compute_log_gradient(y, tx, w,**kwargs)
         
         loss = compute_log_loss(y, tx, w)
         if loss > best_loss - tol:
@@ -345,7 +344,7 @@ def reg_logistic_regression(y, tx, lambda_=1, initial_w=None, max_iters=1000, ga
     best_loss=VERY_LARGE_NUM
     n_iter_no_change=0
 
-    for iter in tqdm(range(max_iters)):
+    for iter in range(max_iters):
         if penalty=='l2':
             grad = compute_log_gradient(y, tx, w) + lambda_ *w
         elif penalty=='l1':
