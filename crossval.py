@@ -1,4 +1,5 @@
 import numpy as np 
+from tqdm import tqdm
 
 def build_k_indices(y, k_fold, seed=None):
     """build k indices for k-fold."""
