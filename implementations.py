@@ -52,7 +52,7 @@ def compute_gradient(y, tx, w):
     grad = -1/N*tx.T@e
     return grad
 
-def least_squares_GD(y, tx, initial_w=None, max_iters=1000, gamma=0.01, tol=1e-5,max_n_iter_no_change=5,**kwargs):
+def least_squares_GD(y, tx, initial_w=None, max_iters=10000, gamma=0.01, tol=1e-5,max_n_iter_no_change=5,**kwargs):
     """
     Find optimal weights and loss using gradient descent
 
@@ -103,7 +103,7 @@ def least_squares_GD(y, tx, initial_w=None, max_iters=1000, gamma=0.01, tol=1e-5
     print("Stop after {} steps".format(n_iter))
     return best_w, best_loss
 
-def least_squares_SGD(y, tx, initial_w=None, max_iters=1000, gamma=0.01, tol=1e-5,max_n_iter_no_change=5, **kwargs):
+def least_squares_SGD(y, tx, initial_w=None, max_iters=10000, gamma=0.01, tol=1e-5,max_n_iter_no_change=5, **kwargs):
     """
     Find optimal weights and loss using stochastic gradient descent
 
@@ -138,7 +138,7 @@ def least_squares_SGD(y, tx, initial_w=None, max_iters=1000, gamma=0.01, tol=1e-
     best_loss=VERY_LARGE_NUM
     n_iter_no_change=0
 
-    for m_y, m_tx in batch_iter(y, tx, batch_size, num_batches=max_iters):
+    for n_iter, (m_y, m_tx) in enumerate(batch_iter(y, tx, batch_size, num_batches=max_iters)):
         grad = compute_gradient(m_y, m_tx, w,**kwargs)
         w = w - gamma*grad
         loss = compute_loss(y, tx, w)
@@ -257,7 +257,7 @@ def compute_log_gradient(y, tx, w,**kwargs):
         grad = tx.T.dot((pred - y/2 - 1/2))/len(y)
     return grad
 
-def logistic_regression(y, tx, initial_w=None, max_iters=1000, gamma=0.01, tol=1e-5,max_n_iter_no_change=5,**kwargs):
+def logistic_regression(y, tx, initial_w=None, max_iters=10000, gamma=0.01, tol=1e-5,max_n_iter_no_change=5,**kwargs):
     """
     Find optimal weights and loss using logistic regresssion
 
@@ -305,7 +305,7 @@ def logistic_regression(y, tx, initial_w=None, max_iters=1000, gamma=0.01, tol=1
     print("Stop after {} steps".format(n_iter))
     return best_w, best_loss
 
-def reg_logistic_regression(y, tx, lambda_=1, initial_w=None, max_iters=1000, gamma=0.01, tol=1e-5,max_n_iter_no_change=5, penalty='l2',**kwargs):
+def reg_logistic_regression(y, tx, lambda_=1, initial_w=None, max_iters=10000, gamma=0.01, tol=1e-5,max_n_iter_no_change=5, penalty='l2',**kwargs):
     """
     Find optimal weights and loss using regularized logistic regression
 
