@@ -46,7 +46,7 @@ class GridSearchCV():
                 for prod in self.product(params_grid[1:]):
                     yield {**{key:val},**prod}
 
-    def fit(self, y,tX, verbose=True, **kwargs):
+    def fit(self, y,tX, pipeline=None,addition_on_train=None, addition_on_test=None, verbose=True, **kwargs):
         k_indices = self.build_k_indices(y)
 
         params_to_acc = {}
@@ -57,6 +57,14 @@ class GridSearchCV():
                 test_indices = k_indices[k]
                 x_train, x_test = tX[train_indices], tX[test_indices]
                 y_train, y_test = y[train_indices], y[test_indices]
+                if pipeline is not None:
+                    x_train = pipeline.fit_transform(x_train)
+                    if addition_on_train is not None:
+                        x_train, y_train = addition_on_train(x_train,y_train)
+                    x_test = pipeline.transform(x_test)
+                    if addition_on_test is not None:
+                        x_test, y_test = addition_on_test(x_test,y_test)
+                        
                 w, loss = self.model(y_train, x_train,**params, **kwargs)            
 
                 y_pred = self.pred_functs(w, x_test)
