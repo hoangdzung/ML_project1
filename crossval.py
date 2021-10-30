@@ -52,7 +52,7 @@ class CrossVal():
                 if addition_on_test is not None:
                     x_test, y_test = addition_on_test(x_test,y_test)
 
-            w, loss = self.model(y_train, x_train,**params, **kwargs)            
+            w, loss = self.model(y_train, x_train, **kwargs)            
 
             y_pred = self.pred_functs(w, x_test)
 
@@ -103,4 +103,4 @@ class GridSearchCV():
             w,loss = self.model(y,tX, **dict(best_params),**kwargs)
         else:
             w, loss = None, None 
-        return w, loss, best_params, params_to_acc  
+        return w, loss, params_to_acc[best_params], best_params, params_to_acc  
