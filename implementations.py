@@ -179,7 +179,7 @@ def least_squares(y, tx,**kwargs):
     """
 
     w = np.linalg.solve(tx.T@tx, tx.T@y)
-    loss = compute_loss(y, tx, w, **kwargs)
+    loss = compute_loss(y, tx, w)
     return w, loss
 
 def ridge_regression(y, tx, lambda_=1,**kwargs):
@@ -205,7 +205,7 @@ def ridge_regression(y, tx, lambda_=1,**kwargs):
     N, D = tx.shape
     I = np.identity(D)
     w = np.linalg.solve(tx.T@tx + lambda_*2*N*I, tx.T@y)
-    loss = compute_loss(y, tx, w,**kwargs) + lambda_*(w**2).sum()
+    loss = compute_loss(y, tx, w) + lambda_*(w**2).sum()
     return w, loss
 
 def split_data(x, y, ratio, seed=1):
