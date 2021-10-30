@@ -106,7 +106,7 @@ class PartitionCrossVal(CrossVal):
     def __init__ (self, model, pred_functs, acc_functs, nfold=5, refit=True, seed=None):
         super(PartitionCrossVal, self).__init__( model, pred_functs, acc_functs, nfold, refit, seed)
 
-    def fit(self, y,tX, pipeline=None,addition_on_train=None, addition_on_test=None, **kwargs):
+    def fit(self, y,tX, pipeline=None,addition_on_train=None, addition_on_test=None, keep_cols_list=None **kwargs):
         k_indices = self.build_k_indices(y)
 
         scores = []
@@ -119,7 +119,10 @@ class PartitionCrossVal(CrossVal):
             y_pred_list = []
             for jet_num in range(4):
                 sub_x_train = x_train[x_train[:,COL2ID['PRI_jet_num']]==jet_num]
-                keep_cols = np.array([i for i in range(sub_x_train.shape[-1]) if len(set(sub_x_train[:,i]))>1])
+                if keep_cols_list is not None:
+                    keep_cols = np.array([COL2ID[col_name] for col_name in keep_cols_list[jet_num]])
+                else:
+                    keep_cols = np.array([i for i in range(sub_x_train.shape[-1]) if len(set(sub_x_train[:,i]))>1])
                 sub_x_train = sub_x_train[:,keep_cols]
                 sub_y_train = y_train[x_train[:,COL2ID['PRI_jet_num']]==jet_num]
                 sub_x_test = x_test[x_test[:,COL2ID['PRI_jet_num']]==jet_num]
