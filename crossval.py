@@ -90,7 +90,8 @@ class CrossVal():
 
             score = [acc_funct(y_test, y_pred) for acc_funct in self.acc_functs]
             scores.append(score)
-        scores = np.array(scores).mean(0)
+        scores_mean = np.array(scores).mean(0)
+        scores_std = np.array(scores).std(0)
 
         if self.refit:
             tX = pipeline.fit_transform(tX)
@@ -99,7 +100,7 @@ class CrossVal():
             w,loss = self.model(y,tX,**kwargs)
         else:
             w, loss = None, None
-        return w, loss, scores
+        return w, loss, scores_mean, scores_std
 
 class PartitionCrossVal(CrossVal):
     def __init__ (self, model, pred_functs, acc_functs, nfold=5, refit=True, seed=None):
@@ -143,14 +144,15 @@ class PartitionCrossVal(CrossVal):
 
             score = [acc_funct(y_test, y_pred) for acc_funct in self.acc_functs]
             scores.append(score)
-        scores = np.array(scores).mean(0)
+        scores_mean = np.array(scores).mean(0)
+        scores_std = np.array(scores).std(0)
 
         if self.refit:
             print("Not support refit at the moment")
             w, loss = None, None
         else:
             w, loss = None, None
-        return w, loss, scores
+        return w, loss, scores_mean, scores_std
 
 class MultiPartitionCrossVal(CrossVal):
     def __init__ (self, model, pred_functs, acc_functs, nfold=5, refit=True, seed=None):
@@ -205,12 +207,15 @@ class MultiPartitionCrossVal(CrossVal):
             scores.append(score)
         scores = np.array(scores).mean(0)
 
+        scores_mean = np.array(scores).mean(0)
+        scores_std = np.array(scores).std(0)
+
         if self.refit:
             print("Not support refit at the moment")
             w, loss = None, None
         else:
             w, loss = None, None
-        return w, loss, scores
+        return w, loss, scores_mean, scores_std
 
 class GridSearchCV():
     def __init__ (self, model, pred_functs, acc_functs, params_grid, cross_val, nfold=5, refit=True, seed=None):
@@ -236,12 +241,12 @@ class GridSearchCV():
         params_to_acc = {}
         for params in self.product(self.params_grid):
             crossval = self.cross_val(self.model, self.pred_functs, self.acc_functs, self.nfold, refit=False, seed=self.seed)
-            _, _, scores = crossval.fit(y,tX, pipeline, addition_on_train, addition_on_test,**params)
+            _, _, scores_mean, scores_std = crossval.fit(y,tX, pipeline, addition_on_train, addition_on_test,**params)
             if verbose:
-                print(params, scores)
-            params_to_acc[tuple(params.items())] = scores.tolist() 
+                print(params, scores_mean)
+            params_to_acc[tuple(params.items())] = (scores_mean.tolist(), scores_std.tolist())
 
-        best_params = max(params_to_acc, key=lambda x: params_to_acc[x][0])
+        best_params = max(params_to_acc, key=lambda x: params_to_acc[x][0][0])
         if self.refit:
             w,loss = self.model(y,tX, **dict(best_params),**kwargs)
         else:
