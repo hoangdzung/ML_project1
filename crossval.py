@@ -90,8 +90,6 @@ class GridSearchCV():
                     yield {**{key:val},**prod}
 
     def fit(self, y,tX, pipeline=None,addition_on_train=None, addition_on_test=None, verbose=True, **kwargs):
-        k_indices = self.build_k_indices(y)
-
         params_to_acc = {}
         for params in self.product(self.params_grid):
             crossval = CrossVal(self.model, self.pred_functs, self.acc_functs, self.nfold, refit=False, seed=self.seed)
