@@ -59,7 +59,7 @@ class GridSearchCV():
                 y_train, y_test = y[train_indices], y[test_indices]
                 w, loss = self.model(y_train, x_train,**params, **kwargs)            
 
-                y_pred = self.pred_functs(x_test, w)
+                y_pred = self.pred_functs(w, x_test)
                 score = self.acc_functs(y_test, y_pred)
                 scores.append(score)
             score = np.mean(score)
