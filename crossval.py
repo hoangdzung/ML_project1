@@ -104,3 +104,38 @@ class GridSearchCV():
         else:
             w, loss = None, None 
         return w, loss, params_to_acc[best_params], best_params, params_to_acc  
+
+class GridSearchCV():
+    def __init__ (self, model, pred_functs, acc_functs, params_grid, nfold=5, refit=True, seed=None):
+        self.model = model 
+        self.pred_functs = pred_functs 
+        self.acc_functs = acc_functs 
+        self.params_grid = tuple(params_grid.items())
+        self.nfold = nfold
+        self.refit = refit 
+        self.seed = seed 
+
+    def product(self, params_grid):
+        if not params_grid:
+            yield {}
+        else:
+            key, vals = params_grid[0]
+            for val in vals:
+                for prod in self.product(params_grid[1:]):
+                    yield {**{key:val},**prod}
+
+    def fit(self, y,tX, pipeline=None,addition_on_train=None, addition_on_test=None, verbose=True, **kwargs):
+        params_to_acc = {}
+        for params in self.product(self.params_grid):
+            crossval = CrossVal(self.model, self.pred_functs, self.acc_functs, self.nfold, refit=False, seed=self.seed)
+            _, _, scores = crossval.fit(y,tX, pipeline, addition_on_train, addition_on_test,**params)
+            if verbose:
+                print(params, scores)
+            params_to_acc[tuple(params.items())] = scores.tolist() 
+
+        best_params = max(params_to_acc, key=lambda x: params_to_acc[x][0])
+        if self.refit:
+            w,loss = self.model(y,tX, **dict(best_params),**kwargs)
+        else:
+            w, loss = None, None 
+        return w, loss, params_to_acc[best_params], best_params, params_to_acc 
