@@ -60,14 +60,15 @@ class GridSearchCV():
                 w, loss = self.model(y_train, x_train,**params, **kwargs)            
 
                 y_pred = self.pred_functs(w, x_test)
-                score = self.acc_functs(y_test, y_pred)
-                scores.append(score)
-            score = np.mean(score)
-            if verbose:
-                print(params, score)
-            params_to_acc[tuple(params.items())] = score 
 
-        best_params = max(params_to_acc, key=lambda x: params_to_acc[x])
+                score = [acc_funct(y_test, y_pred) for acc_funct in self.acc_functs]
+                scores.append(score)
+            scores = np.array(scores).mean(0)
+            if verbose:
+                print(params, scores)
+            params_to_acc[tuple(params.items())] = scores.tolist() 
+
+        best_params = max(params_to_acc, key=lambda x: params_to_acc[x][0])
         if self.refit:
             w,loss = self.model(y,tX, **dict(best_params),**kwargs)
 
