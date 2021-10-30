@@ -39,7 +39,7 @@ class CrossVal():
         k_indices = self.build_k_indices(y)
 
         scores = []
-        for k in range(self.nfold):
+        for k in tqdm(range(self.nfold), desc="Run kfold"):
             train_indices = np.concatenate([k_indices[i] for i in range(k_indices.shape[0]) if i!=k])
             test_indices = k_indices[k]
             x_train, x_test = tX[train_indices], tX[test_indices]
@@ -62,7 +62,8 @@ class CrossVal():
 
         if self.refit:
             tX = pipeline.fit_transform(tX)
-            tX, y = addition_on_train(tX, y)
+            if addition_on_train is not None:
+                tX, y = addition_on_train(tX, y)
             w,loss = self.model(y,tX,**kwargs)
         else:
             w, loss = None, None
