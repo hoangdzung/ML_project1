@@ -106,7 +106,7 @@ class PartitionCrossVal(CrossVal):
     def __init__ (self, model, pred_functs, acc_functs, nfold=5, refit=True, seed=None):
         super(PartitionCrossVal, self).__init__( model, pred_functs, acc_functs, nfold, refit, seed)
 
-    def fit(self, y,tX, pipeline=None,addition_on_train=None, addition_on_test=None, keep_cols_list=None **kwargs):
+    def fit(self, y,tX, pipeline=None,addition_on_train=None, addition_on_test=None, keep_cols_list=None, **kwargs):
         k_indices = self.build_k_indices(y)
 
         scores = []
