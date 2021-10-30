@@ -100,7 +100,7 @@ def least_squares_GD(y, tx, initial_w=None, max_iters=1000, gamma=0.01, tol=1e-4
             best_loss = loss 
             best_w = w
             n_iter_no_change = 0
-
+    print("Stop after {} steps".format(n_iter))
     return best_w, best_loss
 
 def least_squares_SGD(y, tx, initial_w=None, max_iters=1000, gamma=0.01, tol=1e-4,max_n_iter_no_change=5, **kwargs):
@@ -150,7 +150,7 @@ def least_squares_SGD(y, tx, initial_w=None, max_iters=1000, gamma=0.01, tol=1e-
             best_loss = loss 
             best_w = w
             n_iter_no_change = 0
-            
+    print("Stop after {} steps".format(n_iter))            
     return best_w, best_loss
 
 def least_squares(y, tx,**kwargs):
@@ -302,7 +302,7 @@ def logistic_regression(y, tx, initial_w=None, max_iters=1000, gamma=0.01, tol=1
             best_loss = loss 
             best_w = w
             n_iter_no_change = 0
-
+    print("Stop after {} steps".format(n_iter))
     return best_w, best_loss
 
 def reg_logistic_regression(y, tx, lambda_=1, initial_w=None, max_iters=1000, gamma=0.01, tol=1e-4,max_n_iter_no_change=5, penalty='l2',**kwargs):
@@ -365,7 +365,7 @@ def reg_logistic_regression(y, tx, lambda_=1, initial_w=None, max_iters=1000, ga
             best_loss = loss 
             best_w = w
             n_iter_no_change = 0
-
+    print("Stop after {} steps".format(n_iter))
     return best_w, best_loss
 
 def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):

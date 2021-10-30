@@ -40,7 +40,7 @@ class CrossVal():
         k_indices = self.build_k_indices(y)
 
         scores = []
-        for k in tqdm(range(self.nfold), desc="Run kfold"):
+        for k in range(self.nfold):
             train_indices = np.concatenate([k_indices[i] for i in range(k_indices.shape[0]) if i!=k])
             test_indices = k_indices[k]
             x_train, x_test = tX[train_indices], tX[test_indices]
