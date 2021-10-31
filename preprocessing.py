@@ -92,36 +92,6 @@ class PolynomialFeature():
     def fit_transform(self,tX):
         return self.transform(tX)
 
-class PolynomialFeature():
-    def __init__(self,degree=1,cross_feat=False):
-        self.degree=degree
-        self.cross_feat = cross_feat
-    
-    def create_crossfeat(self, tX,degree):
-
-        indices = [np.arange(tX.shape[1]) for i in range(degree)]
-        combinations = np.array(np.meshgrid(*indices)).T.reshape(-1,degree)
-        combinations=combinations[((combinations[:,1:]-combinations[:,:-1])>0).all(axis=1)]
-
-        new_feats = []
-        for combination in combinations:
-            new_feats.append(np.prod(tX[ :,combination],axis=1,keepdims=True))
-
-        return np.concatenate(new_feats,axis=1)
-    
-    def transform(self,tX):
-        if self.degree >1:
-            tXs = [tX]
-            for d in range(2,self.degree+1):
-                tXs.append(tX**d)
-            if self.cross_feat:
-                tXs.append(self.create_crossfeat(tX,self.degree))
-            tX = np.concatenate(tXs, axis=1)
-        return tX
-
-    def fit_transform(self,tX):
-        return self.transform(tX)
-
 class NonLinearTransformer():
     def __init__(self, functs):
         assert len(functs) >0, "functs must not be empty"
@@ -137,7 +107,7 @@ class NonLinearTransformer():
         return np.concatenate(tXs, axis=-1)
 
     def fit_transform(self, tX):
-        self.transform(tX)
+        return self.transform(tX)
 
 class Pipeline():
     def __init__(self,*transformers):
