@@ -52,7 +52,7 @@ def compute_gradient(y, tx, w):
     grad = -1/N*tx.T@e
     return grad
 
-def least_squares_GD(y, tx, initial_w=None, max_iters=1000, gamma=10, early_stopping=False, tol=1e-5,max_n_iter_no_change=3,**kwargs):
+def least_squares_GD(y, tx, initial_w=None, max_iters=1000, gamma=1, early_stopping=False, tol=1e-5,max_n_iter_no_change=3,**kwargs):
     """
     Find optimal weights and loss using gradient descent
 
@@ -114,7 +114,7 @@ def least_squares_GD(y, tx, initial_w=None, max_iters=1000, gamma=10, early_stop
     else:
         return w, compute_loss(y, tx, w)
 
-def least_squares_SGD(y, tx, initial_w=None, max_iters=1000, gamma=10, early_stopping=False, tol=1e-5,max_n_iter_no_change=3, **kwargs):
+def least_squares_SGD(y, tx, initial_w=None, max_iters=1000, gamma=1, early_stopping=False, tol=1e-5,max_n_iter_no_change=3, **kwargs):
     """
     Find optimal weights and loss using stochastic gradient descent
 
@@ -280,7 +280,7 @@ def compute_log_gradient(y, tx, w,**kwargs):
         grad = tx.T.dot((pred - y/2 - 1/2))/len(y)
     return grad
 
-def logistic_regression(y, tx, initial_w=None, max_iters=1000, gamma=10, early_stopping=False, tol=1e-5,max_n_iter_no_change=3,**kwargs):
+def logistic_regression(y, tx, initial_w=None, max_iters=1000, gamma=1, early_stopping=False, tol=1e-5,max_n_iter_no_change=3,**kwargs):
     """
     Find optimal weights and loss using logistic regresssion
 
@@ -339,7 +339,7 @@ def logistic_regression(y, tx, initial_w=None, max_iters=1000, gamma=10, early_s
     else:
         return w, compute_log_loss(y, tx, w)
 
-def reg_logistic_regression(y, tx, lambda_=1, initial_w=None, max_iters=1000, gamma=10, early_stopping=False, tol=1e-5,max_n_iter_no_change=3, penalty='l2',**kwargs):
+def reg_logistic_regression(y, tx, lambda_=1, initial_w=None, max_iters=1000, gamma=1, early_stopping=False, tol=1e-5,max_n_iter_no_change=3, penalty='l2',**kwargs):
     """
     Find optimal weights and loss using regularized logistic regression
 

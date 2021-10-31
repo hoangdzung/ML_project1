@@ -70,7 +70,7 @@ class CrossVal():
     def fit(self, y,tX, pipeline=None,addition_on_train=None, addition_on_test=None, **kwargs):
         k_indices = self.build_k_indices(y)
 
-        scores = []
+        train_scores, test_scores = [], []
         for k in range(self.nfold):
             train_indices = np.concatenate([k_indices[i] for i in range(k_indices.shape[0]) if i!=k])
             test_indices = k_indices[k]
@@ -86,12 +86,14 @@ class CrossVal():
 
             w, loss = self.model(y_train, x_train, **kwargs)            
 
-            y_pred = self.pred_functs(w, x_test)
+            y_test_pred = self.pred_functs(w, x_test)
+            y_train_pred = self.pred_functs(w, x_train)
 
-            score = [acc_funct(y_test, y_pred) for acc_funct in self.acc_functs]
-            scores.append(score)
-        scores_mean = np.array(scores).mean(0)
-        scores_std = np.array(scores).std(0)
+            test_scores.append([acc_funct(y_test, y_test_pred) for acc_funct in self.acc_functs])
+            train_scores.append([acc_funct(y_train, y_train_pred) for acc_funct in self.acc_functs])
+
+        test_scores_mean, test_scores_std = np.array(test_scores).mean(0), np.array(test_scores).std(0)
+        train_scores_mean = np.array(test_scores).mean(0)
 
         if self.refit:
             tX = pipeline.fit_transform(tX)
@@ -100,7 +102,7 @@ class CrossVal():
             w,loss = self.model(y,tX,**kwargs)
         else:
             w, loss = None, None
-        return w, loss, scores_mean, scores_std
+        return w, loss, test_scores_mean, test_scores_std, train_scores_mean
 
 class PartitionCrossVal(CrossVal):
     def __init__ (self, model, pred_functs, acc_functs, nfold=5, refit=True, seed=None):
@@ -115,8 +117,8 @@ class PartitionCrossVal(CrossVal):
             test_indices = k_indices[k]
             x_train, x_test = tX[train_indices], tX[test_indices]
             y_train, y_test = y[train_indices], y[test_indices]
-            y_test_list = []
-            y_pred_list = []
+            y_test_list, y_train_list = [], []
+            y_test_pred_list, y_train_pred_list = [], []
             for jet_num in range(4):
                 sub_x_train = x_train[x_train[:,COL2ID['PRI_jet_num']]==jet_num]
                 if keep_cols_list is not None:
@@ -137,25 +139,32 @@ class PartitionCrossVal(CrossVal):
                     if addition_on_test is not None:
                         sub_x_test, sub_y_test = addition_on_test(sub_x_test,sub_y_test)
                 w, loss = self.model(sub_y_train, sub_x_train, **kwargs)            
-                sub_y_pred = self.pred_functs(w, sub_x_test)
+                sub_y_test_pred = self.pred_functs(w, sub_x_test)
+                sub_y_train_pred = self.pred_functs(w, sub_x_train)
 
                 y_test_list.append(sub_y_test)
-                y_pred_list.append(sub_y_pred)
+                y_test_pred_list.append(sub_y_pred_test)
+                y_train_list.append(sub_y_train)
+                y_train_pred_list.append(sub_y_pred_train)
 
             y_test = np.concatenate(y_test_list)
-            y_pred = np.concatenate(y_pred_list)
+            y_test_pred = np.concatenate(y_test_pred_list)            
+            y_train = np.concatenate(y_train_list)
+            y_train_pred = np.concatenate(y_train_pred_list)
 
-            score = [acc_funct(y_test, y_pred) for acc_funct in self.acc_functs]
-            scores.append(score)
-        scores_mean = np.array(scores).mean(0)
-        scores_std = np.array(scores).std(0)
+            test_scores.append([acc_funct(y_test, y_test_pred) for acc_funct in self.acc_functs])
+            train_scores.append([acc_funct(y_train, y_train_pred) for acc_funct in self.acc_functs])
+
+        test_scores_mean, test_scores_std = np.array(test_scores).mean(0), np.array(test_scores).std(0)
+        train_scores_mean = np.array(test_scores).mean(0)
+
 
         if self.refit:
             print("Not support refit at the moment")
             w, loss = None, None
         else:
             w, loss = None, None
-        return w, loss, scores_mean, scores_std
+        return w, loss, test_scores_mean, test_scores_std, train_scores_mean
 
 class MultiPartitionCrossVal(CrossVal):
     def __init__ (self, model, pred_functs, acc_functs, nfold=5, refit=True, seed=None):
@@ -170,8 +179,8 @@ class MultiPartitionCrossVal(CrossVal):
             test_indices = k_indices[k]
             x_train, x_test = tX[train_indices], tX[test_indices]
             y_train, y_test = y[train_indices], y[test_indices]
-            y_test_list = []
-            y_pred_list = []
+            y_test_list, y_train_list = [], []
+            y_test_pred_list, y_train_pred_list = [], []
             for jet_num in range(4):
                 sub_x_train = x_train[x_train[:,COL2ID['PRI_jet_num']]==jet_num]
                 keep_cols = np.array([i for i in range(sub_x_train.shape[-1]) if len(set(sub_x_train[:,i]))>1])
@@ -198,27 +207,32 @@ class MultiPartitionCrossVal(CrossVal):
                             sub_x_test_mass, sub_y_test_mass = addition_on_test(sub_x_test_mass,sub_y_test_mass)
 
                     w, loss = self.model(sub_y_train_mass, sub_x_train_mass, **kwargs)            
-                    sub_y_pred = self.pred_functs(w, sub_x_test_mass)
+                    sub_y_test_pred = self.pred_functs(w, sub_x_test_mass)
+                    sub_y_train_pred = self.pred_functs(w, sub_x_train_mass)
 
                     y_test_list.append(sub_y_test_mass)
-                    y_pred_list.append(sub_y_pred)
+                    y_test_pred_list.append(sub_y_test_pred)
+                    y_train_list.append(sub_y_train_mass)
+                    y_train_pred_list.append(sub_y_train_pred)
 
             y_test = np.concatenate(y_test_list)
-            y_pred = np.concatenate(y_pred_list)
+            y_test_pred = np.concatenate(y_test_pred_list)            
+            y_train = np.concatenate(y_train_list)
+            y_train_pred = np.concatenate(y_train_pred_list)
             
-            score = [acc_funct(y_test, y_pred) for acc_funct in self.acc_functs]
-            scores.append(score)
-        scores = np.array(scores).mean(0)
+            test_scores.append([acc_funct(y_test, y_test_pred) for acc_funct in self.acc_functs])
+            train_scores.append([acc_funct(y_train, y_train_pred) for acc_funct in self.acc_functs])
 
-        scores_mean = np.array(scores).mean(0)
-        scores_std = np.array(scores).std(0)
+
+        test_scores_mean, test_scores_std = np.array(test_scores).mean(0), np.array(test_scores).std(0)
+        train_scores_mean = np.array(test_scores).mean(0)
 
         if self.refit:
             print("Not support refit at the moment")
             w, loss = None, None
         else:
             w, loss = None, None
-        return w, loss, scores_mean, scores_std
+        return w, loss, test_scores_mean, test_scores_std, train_scores_mean
 
 class GridSearchCV():
     def __init__ (self, model, pred_functs, acc_functs, params_grid, cross_val, nfold=5, refit=True, seed=None):
@@ -244,9 +258,9 @@ class GridSearchCV():
         params_to_acc = {}
         for params in self.product(self.params_grid):
             crossval = self.cross_val(self.model, self.pred_functs, self.acc_functs, self.nfold, refit=False, seed=self.seed)
-            _, _, scores_mean, scores_std = crossval.fit(y,tX, pipeline, addition_on_train, addition_on_test,**params)
+            _, _, test_scores_mean, test_scores_std, train_scores_mean = crossval.fit(y,tX, pipeline, addition_on_train, addition_on_test,**params)
             if verbose:
-                print(params, scores_mean)
+                print(params, test_scores_mean, train_scores_mean)
             params_to_acc[tuple(params.items())] = (scores_mean.tolist(), scores_std.tolist())
 
         best_params = max(params_to_acc, key=lambda x: params_to_acc[x][0][0])
