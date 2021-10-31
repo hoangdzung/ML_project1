@@ -183,11 +183,8 @@ class MultiPartitionCrossVal(CrossVal):
             y_test_pred_list, y_train_pred_list = [], []
             for jet_num in range(4):
                 sub_x_train = x_train[x_train[:,COL2ID['PRI_jet_num']]==jet_num]
-                keep_cols = np.array([i for i in range(sub_x_train.shape[-1]) if len(set(sub_x_train[:,i]))>1])
-                sub_x_train = sub_x_train[:,keep_cols]
                 sub_y_train = y_train[x_train[:,COL2ID['PRI_jet_num']]==jet_num]
                 sub_x_test = x_test[x_test[:,COL2ID['PRI_jet_num']]==jet_num]
-                sub_x_test = sub_x_test[:,keep_cols]
                 sub_y_test = y_test[x_test[:,COL2ID['PRI_jet_num']]==jet_num]
                 having_mass_train_indices = sub_x_train[:, COL2ID['DER_mass_MMC']]!=-999
                 having_mass_test_indices = sub_x_test[:, COL2ID['DER_mass_MMC']]!=-999
@@ -198,6 +195,10 @@ class MultiPartitionCrossVal(CrossVal):
                     sub_y_train_mass = sub_y_train[mass_train_indices]
                     sub_x_test_mass = sub_x_test[mass_test_indices]
                     sub_y_test_mass = sub_y_test[mass_test_indices]
+                    keep_cols = np.array([i for i in range(sub_x_train_mass.shape[-1]) if len(set(sub_x_train_mass[:,i]))>1])
+                    sub_x_train_mass = sub_x_train_mass[:,keep_cols]
+                    sub_x_test_mass = sub_x_test_mass[:,keep_cols]
+
                     if pipeline is not None:
                         sub_x_train_mass = pipeline.fit_transform(sub_x_train_mass)
                         if addition_on_train is not None:
