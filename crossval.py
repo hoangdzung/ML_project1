@@ -143,7 +143,7 @@ class PartitionCrossVal(CrossVal):
                 sub_y_train_pred = self.pred_functs(w, sub_x_train)
 
                 y_test_list.append(sub_y_test)
-                y_test_pred_list.append(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)
+                y_test_pred_list.append(sub_y_test_pred)
                 y_train_list.append(sub_y_train)
                 y_train_pred_list.append(sub_y_train_pred)
 
