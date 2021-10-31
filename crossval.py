@@ -111,7 +111,7 @@ class PartitionCrossVal(CrossVal):
     def fit(self, y,tX, pipeline=None,addition_on_train=None, addition_on_test=None, keep_cols_list=None, **kwargs):
         k_indices = self.build_k_indices(y)
 
-        scores = []
+        train_scores, test_scores = [], []
         for k in range(self.nfold):
             train_indices = np.concatenate([k_indices[i] for i in range(k_indices.shape[0]) if i!=k])
             test_indices = k_indices[k]
@@ -173,7 +173,7 @@ class MultiPartitionCrossVal(CrossVal):
     def fit(self, y,tX, pipeline=None,addition_on_train=None, addition_on_test=None, **kwargs):
         k_indices = self.build_k_indices(y)
 
-        scores = []
+        train_scores, test_scores = [], []
         for k in range(self.nfold):
             train_indices = np.concatenate([k_indices[i] for i in range(k_indices.shape[0]) if i!=k])
             test_indices = k_indices[k]
