@@ -166,6 +166,70 @@ class PartitionCrossVal(CrossVal):
             w, loss = None, None
         return w, loss, test_scores_mean, test_scores_std, train_scores_mean
 
+class MassPartitionCrossVal(CrossVal):
+    def __init__ (self, model, pred_functs, acc_functs, nfold=5, refit=True, seed=None):
+        super(PartitionCrossVal, self).__init__( model, pred_functs, acc_functs, nfold, refit, seed)
+
+    def fit(self, y,tX, pipeline=None,addition_on_train=None, addition_on_test=None, keep_cols_list=None, **kwargs):
+        k_indices = self.build_k_indices(y)
+
+        train_scores, test_scores = [], []
+        for k in range(self.nfold):
+            train_indices = np.concatenate([k_indices[i] for i in range(k_indices.shape[0]) if i!=k])
+            test_indices = k_indices[k]
+            x_train, x_test = tX[train_indices], tX[test_indices]
+            y_train, y_test = y[train_indices], y[test_indices]
+            y_test_list, y_train_list = [], []
+            y_test_pred_list, y_train_pred_list = [], []
+
+            having_mass_train_indices = x_train[:, COL2ID['DER_mass_MMC']]!=-999
+            having_mass_test_indices = x_test[:, COL2ID['DER_mass_MMC']]!=-999
+
+            for mass_train_indices, mass_test_indices \
+                in zip([having_mass_train_indices,~having_mass_train_indices],\
+                        [having_mass_test_indices, ~having_mass_test_indices]):
+                sub_x_train = x_train[mass_train_indices]
+                sub_y_train = y_train[mass_train_indices]
+                sub_x_test = x_test[mass_test_indices]
+                sub_y_test = y_test[mass_test_indices]
+                keep_cols = np.array([i for i in range(sub_x_train.shape[-1]) if len(set(sub_x_train[:,i]))>1])
+                sub_x_train = sub_x_train[:,keep_cols]
+                sub_x_test = sub_x_test[:,keep_cols]
+                if pipeline is not None:
+                    sub_x_train = pipeline.fit_transform(sub_x_train)
+                    if addition_on_train is not None:
+                        sub_x_train, sub_y_train = addition_on_train(sub_x_train,sub_y_train)
+                    sub_x_test = pipeline.transform(sub_x_test)
+                    if addition_on_test is not None:
+                        sub_x_test, sub_y_test = addition_on_test(sub_x_test,sub_y_test)
+                w, loss = self.model(sub_y_train, sub_x_train, **kwargs)            
+                sub_y_test_pred = self.pred_functs(w, sub_x_test)
+                sub_y_train_pred = self.pred_functs(w, sub_x_train)
+
+                y_test_list.append(sub_y_test)
+                y_test_pred_list.append(sub_y_test_pred)
+                y_train_list.append(sub_y_train)
+                y_train_pred_list.append(sub_y_train_pred)
+
+            y_test = np.concatenate(y_test_list)
+            y_test_pred = np.concatenate(y_test_pred_list)            
+            y_train = np.concatenate(y_train_list)
+            y_train_pred = np.concatenate(y_train_pred_list)
+
+            test_scores.append([acc_funct(y_test, y_test_pred) for acc_funct in self.acc_functs])
+            train_scores.append([acc_funct(y_train, y_train_pred) for acc_funct in self.acc_functs])
+
+        test_scores_mean, test_scores_std = np.array(test_scores).mean(0), np.array(test_scores).std(0)
+        train_scores_mean = np.array(train_scores).mean(0)
+
+
+        if self.refit:
+            print("Not support refit at the moment")
+            w, loss = None, None
+        else:
+            w, loss = None, None
+        return w, loss, test_scores_mean, test_scores_std, train_scores_mean
+
 class MultiPartitionCrossVal(CrossVal):
     def __init__ (self, model, pred_functs, acc_functs, nfold=5, refit=True, seed=None):
         super(MultiPartitionCrossVal, self).__init__( model, pred_functs, acc_functs, nfold, refit, seed)
