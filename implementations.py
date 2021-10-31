@@ -52,7 +52,7 @@ def compute_gradient(y, tx, w):
     grad = -1/N*tx.T@e
     return grad
 
-def least_squares_GD(y, tx, initial_w=None, max_iters=1000, gamma=0.01, early_stopping=False, tol=1e-5,max_n_iter_no_change=5,**kwargs):
+def least_squares_GD(y, tx, initial_w=None, max_iters=1000, gamma=10, early_stopping=False, tol=1e-5,max_n_iter_no_change=3,**kwargs):
     """
     Find optimal weights and loss using gradient descent
 
@@ -95,8 +95,16 @@ def least_squares_GD(y, tx, initial_w=None, max_iters=1000, gamma=0.01, early_st
             if loss > best_loss - tol:
                 n_iter_no_change+=1
                 if n_iter_no_change >= max_n_iter_no_change:
-                    print("Early stop after {} steps".format(n_iter))
-                    break
+                    # print("Early stop after {} steps".format(n_iter))
+                    # break
+                    gamma = gamma/5
+                    if gamma < 0.001:
+                        # print("Early stop after {} steps".format(n_iter))
+                        break
+                    else:
+                        # print("Lr decrease to {} after {} steps".format(gamma, n_iter))
+                        pass
+                    n_iter_no_change = 0
             else:
                 best_loss = loss 
                 best_w = w
@@ -106,7 +114,7 @@ def least_squares_GD(y, tx, initial_w=None, max_iters=1000, gamma=0.01, early_st
     else:
         return w, compute_loss(y, tx, w)
 
-def least_squares_SGD(y, tx, initial_w=None, max_iters=1000, gamma=0.01, early_stopping=False, tol=1e-5,max_n_iter_no_change=5, **kwargs):
+def least_squares_SGD(y, tx, initial_w=None, max_iters=1000, gamma=10, early_stopping=False, tol=1e-5,max_n_iter_no_change=3, **kwargs):
     """
     Find optimal weights and loss using stochastic gradient descent
 
@@ -149,8 +157,16 @@ def least_squares_SGD(y, tx, initial_w=None, max_iters=1000, gamma=0.01, early_s
             if loss > best_loss - tol:
                 n_iter_no_change+=1
                 if n_iter_no_change >= max_n_iter_no_change:
-                    print("Early stop after {} steps".format(n_iter))            
-                    break
+                    # print("Early stop after {} steps".format(n_iter))
+                    # break
+                    gamma = gamma/5
+                    if gamma < 0.001:
+                        # print("Early stop after {} steps".format(n_iter))
+                        break
+                    else:
+                        # print("Lr decrease to {} after {} steps".format(gamma, n_iter))
+                        pass
+                    n_iter_no_change = 0
             else:
                 best_loss = loss 
                 best_w = w
@@ -264,7 +280,7 @@ def compute_log_gradient(y, tx, w,**kwargs):
         grad = tx.T.dot((pred - y/2 - 1/2))/len(y)
     return grad
 
-def logistic_regression(y, tx, initial_w=None, max_iters=1000, gamma=0.01, early_stopping=False, tol=1e-5,max_n_iter_no_change=5,**kwargs):
+def logistic_regression(y, tx, initial_w=None, max_iters=1000, gamma=10, early_stopping=False, tol=1e-5,max_n_iter_no_change=3,**kwargs):
     """
     Find optimal weights and loss using logistic regresssion
 
@@ -304,8 +320,16 @@ def logistic_regression(y, tx, initial_w=None, max_iters=1000, gamma=0.01, early
             if loss > best_loss - tol:
                 n_iter_no_change+=1
                 if n_iter_no_change >= max_n_iter_no_change:
-                    print("Early stop after {} steps".format(n_iter))
-                    break
+                    # print("Early stop after {} steps".format(n_iter))
+                    # break
+                    gamma = gamma/5
+                    if gamma < 0.001:
+                        # print("Early stop after {} steps".format(n_iter))
+                        break
+                    else:
+                        # print("Lr decrease to {} after {} steps".format(gamma, n_iter))
+                        pass
+                    n_iter_no_change = 0
             else:
                 best_loss = loss 
                 best_w = w
@@ -315,7 +339,7 @@ def logistic_regression(y, tx, initial_w=None, max_iters=1000, gamma=0.01, early
     else:
         return w, compute_log_loss(y, tx, w)
 
-def reg_logistic_regression(y, tx, lambda_=1, initial_w=None, max_iters=1000, gamma=0.01, early_stopping=False, tol=1e-5,max_n_iter_no_change=5, penalty='l2',**kwargs):
+def reg_logistic_regression(y, tx, lambda_=1, initial_w=None, max_iters=1000, gamma=10, early_stopping=False, tol=1e-5,max_n_iter_no_change=3, penalty='l2',**kwargs):
     """
     Find optimal weights and loss using regularized logistic regression
 
@@ -370,8 +394,16 @@ def reg_logistic_regression(y, tx, lambda_=1, initial_w=None, max_iters=1000, ga
             if loss > best_loss - tol:
                 n_iter_no_change+=1
                 if n_iter_no_change >= max_n_iter_no_change:
-                    print("Early stop after {} steps".format(n_iter))
-                    break
+                    # print("Early stop after {} steps".format(n_iter))
+                    # break
+                    gamma = gamma/5
+                    if gamma < 0.001:
+                        # print("Early stop after {} steps".format(n_iter))
+                        break
+                    else:
+                        # print("Lr decrease to {} after {} steps".format(gamma, n_iter))
+                        pass
+                    n_iter_no_change = 0
             else:
                 best_loss = loss 
                 best_w = w
