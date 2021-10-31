@@ -261,7 +261,7 @@ class GridSearchCV():
             _, _, test_scores_mean, test_scores_std, train_scores_mean = crossval.fit(y,tX, pipeline, addition_on_train, addition_on_test,**params)
             if verbose:
                 print(params, test_scores_mean, train_scores_mean)
-            params_to_acc[tuple(params.items())] = (scores_mean.tolist(), scores_std.tolist())
+            params_to_acc[tuple(params.items())] = (test_scores_mean.tolist(), test_scores_std.tolist())
 
         best_params = max(params_to_acc, key=lambda x: params_to_acc[x][0][0])
         if self.refit:
