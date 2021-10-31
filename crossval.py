@@ -93,7 +93,7 @@ class CrossVal():
             train_scores.append([acc_funct(y_train, y_train_pred) for acc_funct in self.acc_functs])
 
         test_scores_mean, test_scores_std = np.array(test_scores).mean(0), np.array(test_scores).std(0)
-        train_scores_mean = np.array(test_scores).mean(0)
+        train_scores_mean = np.array(train_scores).mean(0)
 
         if self.refit:
             tX = pipeline.fit_transform(tX)
@@ -156,7 +156,7 @@ class PartitionCrossVal(CrossVal):
             train_scores.append([acc_funct(y_train, y_train_pred) for acc_funct in self.acc_functs])
 
         test_scores_mean, test_scores_std = np.array(test_scores).mean(0), np.array(test_scores).std(0)
-        train_scores_mean = np.array(test_scores).mean(0)
+        train_scores_mean = np.array(train_scores).mean(0)
 
 
         if self.refit:
@@ -225,7 +225,7 @@ class MultiPartitionCrossVal(CrossVal):
 
 
         test_scores_mean, test_scores_std = np.array(test_scores).mean(0), np.array(test_scores).std(0)
-        train_scores_mean = np.array(test_scores).mean(0)
+        train_scores_mean = np.array(train_scores).mean(0)
 
         if self.refit:
             print("Not support refit at the moment")
