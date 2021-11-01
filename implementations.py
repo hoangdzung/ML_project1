@@ -65,13 +65,15 @@ def least_squares_GD(y, tx, initial_w=None, max_iters=1000, gamma=1, early_stopp
     initial_w : numpy.ndarray
         vector of weights of size D
     max_iters : int
-        the number of iteration of the algorithm
-    gamma :
-        the step size
-    tol:
-        the stopping criterion
-    max_n_iter_no_change:
-        number of iterations with no improvement to wait before stopping fitting  
+        the maximum number of iteration of the algorithm, default 1000
+    gamma : float
+        the initial step size, default 1
+    early_stopping: bool
+        whether to use early stopping, if not use constant step size equal to initial step size, default False
+    tol: float
+        the stopping criterion, default 1e-5
+    max_n_iter_no_change: int
+        number of iterations with no improvement to wait before stopping fitting, default 3
     Returns
     -------
     (numpy.ndarray, float)
@@ -127,13 +129,15 @@ def least_squares_SGD(y, tx, initial_w=None, max_iters=1000, gamma=1, early_stop
     initial_w : numpy.ndarray
         vector of weights of size D
     max_iters : int
-        the number of iteration of the algorithm
-    gamma :
-        the step size
-    tol:
-        the stopping criterion
-    max_n_iter_no_change:
-        number of iterations with no improvement to wait before stopping fitting  
+        the maximum number of iteration of the algorithm, default 1000
+    gamma : float
+        the initial step size, default 1
+    early_stopping: bool
+        whether to use early stopping, if not use constant step size equal to initial step size, default False
+    tol: float
+        the stopping criterion, default 1e-5
+    max_n_iter_no_change: int
+        number of iterations with no improvement to wait before stopping fitting, default 3
     Returns
     -------
     (numpy.ndarray, float)
@@ -209,7 +213,7 @@ def ridge_regression(y, tx, lambda_=1,**kwargs):
     tx : numpy.ndarray
         matrix of features of size (NxD)
     lambda : float
-        the regularization term
+        the regularization term, default 1
 
     Returns
     -------
@@ -261,17 +265,59 @@ def split_data(x, y, ratio, seed=1):
     return x_train, y_train, x_test, y_test
 
 def sigmoid(t):
-    """apply sigmoid function on t."""
+    """
+    Apply sigmoid function on t.
+
+    Parameters
+    ----------
+    t : float, numpy.ndarray,...
+        input value
+    Returns
+    -------
+    same type as input
+        value after applying sigmoid
+
+    """
     return 1.0 / (1 + np.exp(np.clip(-t, -709.78, 709.78)))
 
 def compute_log_loss(y, tx, w):
-    """compute the cost by negative log likelihood."""
+    """
+    Compute the cost by negative log likelihood.
+    
+    Parameters
+    ----------
+    y : numpy.ndarray
+        vector of labels of size N
+    tx : numpy.ndarray
+        matrix of features of size (NxD)
+    w : numpy.ndarray
+        vector of weights of size D
+    Returns
+    -------
+    float
+        log loss corresponding to {-1,1} labels
+    """
     pred = sigmoid(tx.dot(w))
     loss = (y + 1).T.dot(np.log(pred + VERY_SMALL_NUM)) + (1 - y).T.dot(np.log(1 - pred + VERY_SMALL_NUM))
     return np.squeeze(-loss/2)/len(y)
 
 def compute_log_gradient(y, tx, w,**kwargs):
-    """compute the gradient of loss."""
+    """
+    Compute the gradient of negative log likelihood.
+    
+    Parameters
+    ----------
+    y : numpy.ndarray
+        vector of labels of size N
+    tx : numpy.ndarray
+        matrix of features of size (NxD)
+    w : numpy.ndarray
+        vector of weights of size D
+    Returns
+    -------
+    numpy.ndarray
+        gradient of weights of size D
+    """
     pred = sigmoid(tx.dot(w))
     if 'weight_loss' in kwargs:
         weight = np.where(y > 0, kwargs['weight_loss'][1], kwargs['weight_loss'][0])
@@ -293,13 +339,15 @@ def logistic_regression(y, tx, initial_w=None, max_iters=1000, gamma=1, early_st
     initial_w : numpy.ndarray
         vector of weights of size D
     max_iters : int
-        the number of iteration of the algorithm
-    gamma :
-        the step size
-    tol:
-        the stopping criterion
-    max_n_iter_no_change:
-        number of iterations with no improvement to wait before stopping fitting  
+        the maximum number of iteration of the algorithm, default 1000
+    gamma : float
+        the initial step size, default 1
+    early_stopping: bool
+        whether to use early stopping, if not use constant step size equal to initial step size, default False
+    tol: float
+        the stopping criterion, default 1e-5
+    max_n_iter_no_change: int
+        number of iterations with no improvement to wait before stopping fitting, default 3
     Returns
     -------
     (numpy.ndarray, float)
@@ -354,15 +402,17 @@ def reg_logistic_regression(y, tx, lambda_=1, initial_w=None, max_iters=1000, ga
     initial_w : numpy.ndarray
         vector of weights of size D
     max_iters : int
-        the number of iteration of the algorithm
-    gamma :
-        the step size
-    tol:
-        the stopping criterion
-    max_n_iter_no_change:
-        number of iterations with no improvement to wait before stopping fitting  
-    penalty:
-        the penalty (aka regularization term) to be used
+        the maximum number of iteration of the algorithm, default 1000
+    gamma : float
+        the initial step size, default 1
+    early_stopping: bool
+        whether to use early stopping, if not use constant step size equal to initial step size, default False
+    tol: float
+        the stopping criterion, default 1e-5
+    max_n_iter_no_change: int
+        number of iterations with no improvement to wait before stopping fitting, default 3
+    penalty: string
+        the penalty (aka regularization term) to be used, 'l1' or 'l2', defautl 'l2'
     Returns
     -------
     (numpy.ndarray, float)

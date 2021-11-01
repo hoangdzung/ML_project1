@@ -48,17 +48,48 @@ def create_csv_submission(ids, y_pred, name):
             writer.writerow({'Id':int(r1),'Prediction':int(r2)})
 
 def acc_score(actual, predicted):
+    """
+    Accuracy classification score.
+    
+    Parameters
+    ----------
+    actual : 1d numpy.ndarray
+        Ground truth (correct) labels.
+    predicted : 1d numpy.ndarray
+        Predicted labels
+    Returns
+    -------
+    float:
+        accuracy score
+    """
+
     return (actual==predicted).mean()
 
 def f1_score(actual, predicted, label=1):
 
-    """ A helper function to calculate f1-score for the given `label` """
-
-    # F1 = 2 * (precision * recall) / (precision + recall)
+    """
+    F1 score.
+    
+    Parameters
+    ----------
+    actual : 1d numpy.ndarray
+        Ground truth (correct) labels.
+    predicted : 1d numpy.ndarray
+        Predicted labels
+    label: int
+        Report scores for that label only, default 1
+        Usually in binary classification, the positive label is more critical
+    Returns
+    -------
+    float:
+        f1 score
+    """
+    
     tp = np.sum((actual==label) & (predicted==label))
     fp = np.sum((actual!=label) & (predicted==label))
     fn = np.sum((predicted!=label) & (actual==label))
     
+    # add very small numbers to avoid division by zero
     precision = tp/(tp+fp+1e-20)
     recall = tp/(tp+fn+1e-20)
     f1 = 2 * (precision * recall) / (precision + recall+1e-20)
