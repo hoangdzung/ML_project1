@@ -46,6 +46,34 @@ def build_k_indices(y, k_fold, seed=None):
     return np.array(k_indices)
 
 class CrossVal():
+    """
+    Evaluate a score by cross-validation
+
+    Parameters
+    ----------
+    model : function.
+        One of 6 learning model that take y, tX and additional parameters as inputs
+
+    pred_functs: function
+        The function used to predict the label that take w, tX as inputs 
+    
+    acc_functs: list of functions
+        The list of functions to calculate the score. Each function takes true labels and predicted labels as inputs
+
+    nfold: int
+        Number of folds, default 5
+
+    refit: bool
+        Whether to refit the model with whole tX 
+
+    seed: int, None
+        The seed used for k-fold generation
+        If None, the data will be not shuffled
+  
+    Examples
+    --------
+    See at example.ipynb
+    """
     def __init__ (self, model, pred_functs, acc_functs, nfold=5, refit=True, seed=None):
         self.model = model 
         self.pred_functs = pred_functs 
@@ -68,22 +96,55 @@ class CrossVal():
         return np.array(k_indices)
 
     def fit(self, y,tX, pipeline=None,addition_on_train=None, addition_on_test=None, **kwargs):
+        """
+        Fit the estimator with specific values.
+        
+        Parameters
+        ----------
+        y : numpy.ndarray
+            vector of labels of size N
+        tX : numpy.ndarray
+            Matrix of features of size (NxD)
+        pipeline: Pipeline
+            The preprocessing applied on tX 
+        addition_on_train: function
+            An additional preprocessing function applied on both tX and y, in this case, outlier removal
+        addition_on_test: function
+            An additional preprocessing function applied on both tX and y, in this case, outlier removal
+        kwargs:
+            Other parameter can fitted into self.model (gamma, lambda_, ...)
+
+        Returns
+        -------
+            w: numpy.ndarray, None
+                The weighted learned with full tX, None if refit=False
+            loss: float, None
+                The loss calculated with full tX, None if refit=False
+            test_scores_mean: list of float
+                List of mean of test scores
+            test_scores_std:list of float
+                List of std of test scores 
+            train_scores_mean: list of float
+                List of mean of train scores
+        """
+
         k_indices = self.build_k_indices(y)
 
         train_scores, test_scores = [], []
-        for k in range(self.nfold):
+        for k in range(self.nfold): # for each fold
             train_indices = np.concatenate([k_indices[i] for i in range(k_indices.shape[0]) if i!=k])
             test_indices = k_indices[k]
             x_train, x_test = tX[train_indices], tX[test_indices]
             y_train, y_test = y[train_indices], y[test_indices]
             if pipeline is not None:
+                # apply transformation on features and labels
                 x_train = pipeline.fit_transform(x_train)
                 if addition_on_train is not None:
                     x_train, y_train = addition_on_train(x_train,y_train)
                 x_test = pipeline.transform(x_test)
                 if addition_on_test is not None:
                     x_test, y_test = addition_on_test(x_test,y_test)
-
+            # training the model
             w, loss = self.model(y_train, x_train, **kwargs)            
 
             y_test_pred = self.pred_functs(w, x_test)
@@ -105,10 +166,39 @@ class CrossVal():
         return w, loss, test_scores_mean, test_scores_std, train_scores_mean
 
 class PartitionCrossVal(CrossVal):
+    """
+    Split the dataset by jet-num
+    Evaluate a score by cross-validation
+
+    Parameters
+    ----------
+    model : function.
+        One of 6 learning model that take y, tX and additional parameters as inputs
+
+    pred_functs: function
+        The function used to predict the label that take w, tX as inputs 
+    
+    acc_functs: list of functions
+        The list of functions to calculate the score. Each function takes true labels and predicted labels as inputs
+
+    nfold: int
+        Number of folds, default 5
+
+    refit: bool
+        Whether to refit the model with whole tX
+
+    seed: int, None
+        The seed used for k-fold generation
+        If None, the data will be not shuffled
+  
+    Examples
+    --------
+    See at example.ipynb
+    """
     def __init__ (self, model, pred_functs, acc_functs, nfold=5, refit=True, seed=None):
         super(PartitionCrossVal, self).__init__( model, pred_functs, acc_functs, nfold, refit, seed)
 
-    def fit(self, y,tX, pipeline=None,addition_on_train=None, addition_on_test=None, keep_cols_list=None, **kwargs):
+    def fit(self, y,tX, pipeline=None,addition_on_train=None, addition_on_test=None, **kwargs):
         k_indices = self.build_k_indices(y)
 
         train_scores, test_scores = [], []
@@ -121,10 +211,7 @@ class PartitionCrossVal(CrossVal):
             y_test_pred_list, y_train_pred_list = [], []
             for jet_num in range(4):
                 sub_x_train = x_train[x_train[:,COL2ID['PRI_jet_num']]==jet_num]
-                if keep_cols_list is not None:
-                    keep_cols = np.array([COL2ID[col_name] for col_name in keep_cols_list[jet_num]])
-                else:
-                    keep_cols = np.array([i for i in range(sub_x_train.shape[-1]) if len(set(sub_x_train[:,i]))>1])
+                keep_cols = np.array([i for i in range(sub_x_train.shape[-1]) if len(set(sub_x_train[:,i]))>1])
                 sub_x_train = sub_x_train[:,keep_cols]
                 sub_y_train = y_train[x_train[:,COL2ID['PRI_jet_num']]==jet_num]
                 sub_x_test = x_test[x_test[:,COL2ID['PRI_jet_num']]==jet_num]
@@ -160,17 +247,77 @@ class PartitionCrossVal(CrossVal):
 
 
         if self.refit:
-            print("Not support refit at the moment")
+            print("Not support refit at the moment, except CrossVal")
             w, loss = None, None
         else:
             w, loss = None, None
         return w, loss, test_scores_mean, test_scores_std, train_scores_mean
 
 class MassPartitionCrossVal(CrossVal):
+    """
+    Split the dataset by DER_mass_MMC
+    Evaluate a score by cross-validation
+
+    Parameters
+    ----------
+    model : function.
+        One of 6 learning model that take y, tX and additional parameters as inputs
+
+    pred_functs: function
+        The function used to predict the label that take w, tX as inputs 
+    
+    acc_functs: list of functions
+        The list of functions to calculate the score. Each function takes true labels and predicted labels as inputs
+
+    nfold: int
+        Number of folds, default 5
+
+    refit: bool
+        Whether to refit the model with whole tX 
+
+    seed: int, None
+        The seed used for k-fold generation
+        If None, the data will be not shuffled
+  
+    Examples
+    --------
+    See at example.ipynb
+    """
     def __init__ (self, model, pred_functs, acc_functs, nfold=5, refit=True, seed=None):
         super(MassPartitionCrossVal, self).__init__( model, pred_functs, acc_functs, nfold, refit, seed)
 
-    def fit(self, y,tX, pipeline=None,addition_on_train=None, addition_on_test=None, keep_cols_list=None, **kwargs):
+    def fit(self, y,tX, pipeline=None,addition_on_train=None, addition_on_test=None, **kwargs):
+        """
+        Fit the estimator with specific values.
+        
+        Parameters
+        ----------
+        y : numpy.ndarray
+            vector of labels of size N
+        tX : numpy.ndarray
+            Matrix of features of size (NxD)
+        pipeline: Pipeline
+            The preprocessing applied on tX 
+        addition_on_train: function
+            An additional preprocessing function applied on both tX and y, in this case, outlier removal
+        addition_on_test: function
+            An additional preprocessing function applied on both tX and y, in this case, outlier removal
+        kwargs:
+            Other parameter can fitted into self.model (gamma, lambda_, ...)
+
+        Returns
+        -------
+            w: numpy.ndarray, None
+                The weighted learned with full tX, None if refit=False
+            loss: float, None
+                The loss calculated with full tX, None if refit=False
+            test_scores_mean: list of float
+                List of mean of test scores
+            test_scores_std:list of float
+                List of std of test scores 
+            train_scores_mean: list of float
+                List of mean of train scores
+        """
         k_indices = self.build_k_indices(y)
 
         train_scores, test_scores = [], []
@@ -224,17 +371,78 @@ class MassPartitionCrossVal(CrossVal):
 
 
         if self.refit:
-            print("Not support refit at the moment")
+            print("Not support refit at the moment, except CrossVal")
             w, loss = None, None
         else:
             w, loss = None, None
         return w, loss, test_scores_mean, test_scores_std, train_scores_mean
 
 class MultiPartitionCrossVal(CrossVal):
+    """
+    Split the dataset by jet-num and DER_mass_MMC
+    Evaluate a score by cross-validation
+
+    Parameters
+    ----------
+    model : function.
+        One of 6 learning model that take y, tX and additional parameters as inputs
+
+    pred_functs: function
+        The function used to predict the label that take w, tX as inputs 
+    
+    acc_functs: list of functions
+        The list of functions to calculate the score. Each function takes true labels and predicted labels as inputs
+
+    nfold: int
+        Number of folds, default 5
+
+    refit: bool
+        Whether to refit the model with whole tX 
+
+    seed: int, None
+        The seed used for k-fold generation
+        If None, the data will be not shuffled
+  
+    Examples
+    --------
+    See at example.ipynb
+    """
     def __init__ (self, model, pred_functs, acc_functs, nfold=5, refit=True, seed=None):
         super(MultiPartitionCrossVal, self).__init__( model, pred_functs, acc_functs, nfold, refit, seed)
 
     def fit(self, y,tX, pipeline=None,addition_on_train=None, addition_on_test=None, **kwargs):
+        """
+        Fit the estimator with specific values.
+        
+        Parameters
+        ----------
+        y : numpy.ndarray
+            vector of labels of size N
+        tX : numpy.ndarray
+            Matrix of features of size (NxD)
+        pipeline: Pipeline
+            The preprocessing applied on tX 
+        addition_on_train: function
+            An additional preprocessing function applied on both tX and y, in this case, outlier removal
+        addition_on_test: function
+            An additional preprocessing function applied on both tX and y, in this case, outlier removal
+        kwargs:
+            Other parameter can fitted into self.model (gamma, lambda_, ...)
+
+        Returns
+        -------
+            w: numpy.ndarray, None
+                The weighted learned with full tX, None if refit=False
+            loss: float, None
+                The loss calculated with full tX, None if refit=False
+            test_scores_mean: list of float
+                List of mean of test scores
+            test_scores_std:list of float
+                List of std of test scores 
+            train_scores_mean: list of float
+                List of mean of train scores
+        """
+
         k_indices = self.build_k_indices(y)
 
         train_scores, test_scores = [], []
@@ -293,13 +501,47 @@ class MultiPartitionCrossVal(CrossVal):
         train_scores_mean = np.array(train_scores).mean(0)
 
         if self.refit:
-            print("Not support refit at the moment")
+            print("Not support refit at the moment, except CrossVal")
             w, loss = None, None
         else:
             w, loss = None, None
         return w, loss, test_scores_mean, test_scores_std, train_scores_mean
 
 class GridSearchCV():
+    """
+    Exhaustive grid search over specified parameter values
+
+    Parameters
+    ----------
+    model : function.
+        One of 6 learning model that take y, tX and additional parameters as inputs
+
+    pred_functs: function
+        The function used to predict the label that take w, tX as inputs 
+    
+    acc_functs: list of functions
+        The list of functions to calculate the score. Each function takes true labels and predicted labels as inputs
+
+    params_grid: dict
+        Each key is a parameter, the corresponding value is a list of values need to try
+
+    cross_val: 
+        One of CrossVal, ParititionCrossVal, MassParititionCrossVal and MultiParititionCrossVal
+
+    nfold: int
+        Number of folds, default 5
+
+    refit: bool
+        Whether to refit the model with whole tX 
+
+    seed: int, None
+        The seed used for k-fold generation
+        If None, the data will be not shuffled
+  
+    Examples
+    --------
+    See at example.ipynb
+    """
     def __init__ (self, model, pred_functs, acc_functs, params_grid, cross_val, nfold=5, refit=True, seed=None):
         self.model = model 
         self.pred_functs = pred_functs 
@@ -311,6 +553,9 @@ class GridSearchCV():
         self.seed = seed 
 
     def product(self, params_grid):
+        """
+        Generate combinations of all parameters
+        """
         if not params_grid:
             yield {}
         else:
@@ -320,6 +565,37 @@ class GridSearchCV():
                     yield {**{key:val},**prod}
 
     def fit(self, y,tX, pipeline=None,addition_on_train=None, addition_on_test=None, verbose=True, **kwargs):
+                """
+        Fit the estimator with specific values.
+        
+        Parameters
+        ----------
+        y : numpy.ndarray
+            vector of labels of size N
+        tX : numpy.ndarray
+            Matrix of features of size (NxD)
+        pipeline: Pipeline
+            The preprocessing applied on tX 
+        addition_on_train: function
+            An additional preprocessing function applied on both tX and y, in this case, outlier removal
+        addition_on_test: function
+            An additional preprocessing function applied on both tX and y, in this case, outlier removal
+        kwargs:
+            Other parameter can fitted into self.model (gamma, lambda_, ...)
+
+        Returns
+        -------
+            w: numpy.ndarray, None
+                The weighted learned with full tX and best found parameters, None if refit=False
+            loss: float, None
+                The loss calculated with full tX and best found parameters, None if refit=False
+            test_scores_mean: list of float
+                List of mean of test scores
+            test_scores_std:list of float
+                List of std of test scores 
+            train_scores_mean: list of float
+                List of mean of train scores
+        """
         params_to_acc = {}
         for params in self.product(self.params_grid):
             crossval = self.cross_val(self.model, self.pred_functs, self.acc_functs, self.nfold, refit=False, seed=self.seed)
@@ -330,7 +606,10 @@ class GridSearchCV():
 
         best_params = max(params_to_acc, key=lambda x: params_to_acc[x][0][0])
         if self.refit:
-            w,loss = self.model(y,tX, **dict(best_params),**kwargs)
+            if isinstance(self.cross_val, CrossVal):
+                w,loss = self.model(y,tX, **dict(best_params),**kwargs)
+            else:
+                print("Not support refit at the moment, except CrossVal")
         else:
             w, loss = None, None 
         return w, loss, params_to_acc[best_params], best_params, params_to_acc 
